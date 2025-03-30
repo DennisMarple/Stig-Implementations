@@ -1,0 +1,85 @@
+<#
+.SYNOPSIS
+  This PowerShell script configures and enforces secure Kerberos encryption types (AES128_HMAC_SHA1, AES256_HMAC_SHA1, and future encryption types) by setting the SupportedEncryptionTypes registry value to 0x7ffffff8 and ensures Group Policy alignment for STIG compliance.
+
+
+.NOTES
+    Author          : Dennis Marple
+    LinkedIn        : https://www.linkedin.com/in/dennis-marple/
+    GitHub          : github.com/DennisMarple
+    Date Created    : 2025-03-30
+    Last Modified   : 2025-03-30
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-SO-000190
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\__remediation_template(STIG-ID-WN10-AU-000500).ps1 
+#>
+
+# YOUR CODE GOES HERE
+# Define the registry path and value
+$regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters"
+$regName = "SupportedEncryptionTypes"
+$desiredValue = 0x7ffffff8 # 2147483640 in decimal
+
+# Check if the registry path exists
+if (-not (Test-Path $regPath)) {
+    Write-Host "Registry path does not exist. Creating path..."
+    New-Item -Path $regPath -Force
+}
+
+# Check if the registry value exists
+$currentValue = Get-ItemProperty -Path $regPath -Name $regName -ErrorAction SilentlyContinue
+
+if ($null -eq $currentValue) {
+    # The value does not exist, so create it with the specified value
+    Write-Host "Registry value '$regName' does not exist. Creating it with value $desiredValue..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $desiredValue
+} elseif ($currentValue.$regName -ne $desiredValue) {
+    # The value exists but is not set correctly, so update it
+    Write-Host "Registry value '$regName' exists but is not set to the correct value. Updating it..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $desiredValue
+} else {
+    Write-Host "Registry value '$regName' is already set correctly to $desiredValue."
+}
+
+# Verify the registry setting
+Write-Host "Verifying the registry setting..."
+(Get-ItemProperty -Path $regPath -Name $regName).$regName
+Write-Host "Registry configuration completed successfully."
+
+# Additional Step: Configure the Group Policy for Kerberos Encryption Types (if needed)
+# This step requires that the Group Policy setting for "Network security: Configure encryption types allowed for Kerberos" is enabled.
+
+# Group Policy Registry Path for Network Security Encryption Types
+$gpRegPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+$gpRegName = "KerberosEncryptionTypes"
+$gpRegValue = 0x7ffffff8 # Value corresponding to the selected encryption types (AES128_HMAC_SHA1, AES256_HMAC_SHA1, Future encryption types)
+
+# Check if the Group Policy registry key exists
+$gpCurrentValue = Get-ItemProperty -Path $gpRegPath -Name $gpRegName -ErrorAction SilentlyContinue
+
+if ($null -eq $gpCurrentValue) {
+    # If not exist, create and set the value
+    Write-Host "Group Policy for Kerberos encryption types not configured. Creating and setting it..."
+    Set-ItemProperty -Path $gpRegPath -Name $gpRegName -Value $gpRegValue
+} elseif ($gpCurrentValue.$gpRegName -ne $gpRegValue) {
+    # If exists but is incorrectly set, update it
+    Write-Host "Group Policy for Kerberos encryption types exists but is not configured correctly. Updating..."
+    Set-ItemProperty -Path $gpRegPath -Name $gpRegName -Value $gpRegValue
+} else {
+    Write-Host "Group Policy for Kerberos encryption types is already correctly configured."
+}
+
+Write-Host "Group Policy configuration completed successfully."
+
