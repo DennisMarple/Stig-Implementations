@@ -1,0 +1,59 @@
+<#
+.SYNOPSIS
+This PowerShell script ensures that PowerShell script block logging is enabled by setting the registry key EnableScriptBlockLogging to 1 under HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging for security auditing purposes.
+
+
+.NOTES
+    Author          : Dennis Marple
+    LinkedIn        : https://www.linkedin.com/in/dennis-marple/
+    GitHub          : github.com/DennisMarple
+    Date Created    : 2025-03-30
+    Last Modified   : 2025-03-30
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-CC-000326
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\__remediation_template(STIG-ID-WN10-AU-000500).ps1 
+#>
+
+# YOUR CODE GOES HERE
+# Define the registry path and value
+$regPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"
+$regName = "EnableScriptBlockLogging"
+$regValue = 1
+
+# Check if the registry path exists
+if (-not (Test-Path $regPath)) {
+    Write-Host "Registry path does not exist. Creating path..."
+    New-Item -Path $regPath -Force
+}
+
+# Check if the registry value exists
+$currentValue = Get-ItemProperty -Path $regPath -Name $regName -ErrorAction SilentlyContinue
+
+if ($null -eq $currentValue) {
+    # The value does not exist, so create it with the specified value
+    Write-Host "Registry value '$regName' does not exist. Creating it with value $regValue..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $regValue
+} elseif ($currentValue.$regName -ne $regValue) {
+    # The value exists but is not set correctly, so update it
+    Write-Host "Registry value '$regName' exists but is not set to the correct value. Updating it..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $regValue
+} else {
+    Write-Host "Registry value '$regName' is already set correctly to $regValue."
+}
+
+# Verify the setting
+Write-Host "Verifying registry setting..."
+(Get-ItemProperty -Path $regPath -Name $regName).$regName
+Write-Host "Registry configuration completed successfully."
