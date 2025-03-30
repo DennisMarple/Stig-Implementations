@@ -1,0 +1,58 @@
+<#
+.SYNOPSIS
+   This PowerShell script disables Basic authentication in Windows Remote Management (WinRM) by setting the AllowBasic registry value to 0 under HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service to enforce secure authentication methods.
+
+.NOTES
+    Author          : Dennis Marple
+    LinkedIn        : https://www.linkedin.com/in/dennis-marple/
+    GitHub          : github.com/DennisMarple
+    Date Created    : 2025-03-30
+    Last Modified   : 2025-03-30
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-CC-000345
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\__remediation_template(STIG-ID-WN10-AU-000500).ps1 
+#>
+
+# YOUR CODE GOES HERE
+# Define the registry path and value for AllowBasic
+$regPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service"
+$regName = "AllowBasic"
+$desiredValue = 0 # Disable Basic authentication (0)
+
+# Check if the registry path exists
+if (-not (Test-Path $regPath)) {
+    Write-Host "Registry path does not exist. Creating path..."
+    New-Item -Path $regPath -Force
+}
+
+# Check if the registry value exists
+$currentValue = Get-ItemProperty -Path $regPath -Name $regName -ErrorAction SilentlyContinue
+
+if ($null -eq $currentValue) {
+    # The value does not exist, so create it with the specified value
+    Write-Host "Registry value '$regName' does not exist. Creating it with value $desiredValue..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $desiredValue
+} elseif ($currentValue.$regName -ne $desiredValue) {
+    # The value exists but is not set correctly, so update it
+    Write-Host "Registry value '$regName' exists but is not set to the correct value. Updating it..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $desiredValue
+} else {
+    Write-Host "Registry value '$regName' is already set correctly to $desiredValue."
+}
+
+# Verify the registry setting
+Write-Host "Verifying the registry setting..."
+(Get-ItemProperty -Path $regPath -Name $regName).$regName
+Write-Host "Registry configuration completed successfully."
