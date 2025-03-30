@@ -1,0 +1,58 @@
+<#
+.SYNOPSIS
+This PowerShell script disables Windows telemetry data collection by setting the AllowTelemetry registry value to 0 under HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection to minimize data exposure and comply with enterprise security requirements.
+
+.NOTES
+    Author          : Dennis Marple
+    LinkedIn        : https://www.linkedin.com/in/dennis-marple/
+    GitHub          : github.com/DennisMarple
+    Date Created    : 2025-03-30
+    Last Modified   : 2025-03-30
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-CC-000205
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\__remediation_template(STIG-ID-WN10-AU-000500).ps1 
+#>
+
+# YOUR CODE GOES HERE
+# Define the registry path and value name
+$regPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+$regName = "AllowTelemetry"
+$desiredValue = 0 # Set to 0 for Security (Enterprise Only)
+
+# Check if the registry path exists, and create it if necessary
+if (-not (Test-Path $regPath)) {
+    Write-Host "Registry path does not exist. Creating path..."
+    New-Item -Path $regPath -Force
+}
+
+# Check the current registry value
+$currentValue = Get-ItemProperty -Path $regPath -Name $regName -ErrorAction SilentlyContinue
+
+if ($null -eq $currentValue) {
+    # If the value does not exist, create it with the desired value
+    Write-Host "Registry value '$regName' does not exist. Creating it with value $desiredValue..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $desiredValue
+} elseif ($currentValue.$regName -ne $desiredValue) {
+    # If the value exists but is not correct, update it
+    Write-Host "Registry value '$regName' exists but is not set to the correct value. Updating it..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $desiredValue
+} else {
+    Write-Host "Registry value '$regName' is already set correctly to $desiredValue."
+}
+
+# Verify the registry setting
+Write-Host "Verifying the registry setting..."
+(Get-ItemProperty -Path $regPath -Name $regName).$regName
+Write-Host "Registry configuration completed successfully."
