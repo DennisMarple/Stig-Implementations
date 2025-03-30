@@ -1,0 +1,58 @@
+<#
+.SYNOPSIS
+    This PowerShell script ensures that the maximum size of the Windows Application event log is at least 32768 KB (32 MB).
+
+.NOTES
+    Author          : Dennis Marple
+    LinkedIn        : https://www.linkedin.com/in/dennis-marple/
+    GitHub          : github.com/DennisMarple
+    Date Created    : 2025-03-30
+    Last Modified   : 2024-03-30
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-AU-000500
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\__remediation_template(STIG-ID-WN10-AU-000500).ps1 
+#>
+
+# YOUR CODE GOES HERE
+# Define the registry path and value for Group Policy setting
+$RegPath = "HKLM:\Software\Policies\Microsoft\Windows\EventLog\Application"
+$ValueName1 = "MaxSize"
+$ValueName2 = "Retention"
+$RequiredSizeKB = 32768
+$RequiredSizeBytes = $RequiredSizeKB * 1024
+
+# Ensure the registry path exists
+if (!(Test-Path $RegPath)) {
+    Write-Host "Registry path not found. Creating registry key..."
+    New-Item -Path $RegPath -Force | Out-Null
+}
+
+# Set the maximum log size to 32,768 KB
+Set-ItemProperty -Path $RegPath -Name $ValueName1 -Value $RequiredSizeKB -Type DWord
+Write-Host "Application Event Log size set to $RequiredSizeKB KB"
+
+# Ensure retention method is set (0 = Overwrite as needed, 1 = Archive, 2 = Do not overwrite)
+Set-ItemProperty -Path $RegPath -Name $ValueName2 -Value 0 -Type DWord
+Write-Host "Retention policy set to 'Overwrite as needed'"
+
+# Apply Group Policy changes
+Write-Host "Forcing Group Policy update..."
+gpupdate /force
+
+# Restart the Event Log service to apply changes
+Write-Host "Restarting Windows Event Log service..."
+Restart-Service EventLog -Force
+
+Write-Host "Configuration complete. Ensure documentation is provided to the ISSO if the system sends logs to an external audit server."
