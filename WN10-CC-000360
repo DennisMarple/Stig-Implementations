@@ -1,0 +1,57 @@
+<#
+.SYNOPSIS
+   This PowerShell script disables Digest authentication for WinRM clients by setting the AllowDigest registry value to 0 under HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client to enforce more secure authentication methods.
+
+.NOTES
+    Author          : Dennis Marple
+    LinkedIn        : https://www.linkedin.com/in/dennis-marple/
+    GitHub          : github.com/DennisMarple
+    Date Created    : 2025-03-30
+    Last Modified   : 2025-03-30
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-CC-000360
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\__remediation_template(STIG-ID-WN10-AU-000500).ps1 
+#>
+
+# YOUR CODE GOES HERE
+# Define the registry path and key
+$regPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client"
+$regName = "AllowDigest"
+$regValue = 0
+
+# Check if the registry path exists
+if (-not (Test-Path $regPath)) {
+    Write-Host "Creating registry path: $regPath"
+    New-Item -Path $regPath -Force
+}
+
+# Check if the registry key exists and has the correct value
+$currentValue = Get-ItemProperty -Path $regPath -Name $regName -ErrorAction SilentlyContinue
+
+if ($currentValue.$regName -ne $regValue) {
+    Write-Host "Configuring registry value for $regName..."
+    Set-ItemProperty -Path $regPath -Name $regName -Value $regValue
+} else {
+    Write-Host "Registry value for $regName is already correctly set." -ForegroundColor Green
+}
+
+# Verify if the registry key is set correctly
+$checkValue = Get-ItemProperty -Path $regPath -Name $regName
+
+if ($checkValue.$regName -eq $regValue) {
+    Write-Host "✔ Registry key successfully configured!" -ForegroundColor Green
+} else {
+    Write-Host "❌ Registry configuration failed. Check manually." -ForegroundColor Red
+}
